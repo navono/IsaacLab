@@ -169,59 +169,22 @@ class PourWaterAbsMimicEnv(ManagerBasedRLMimicEnv):
 
     def get_object_poses(self, env_ids: Sequence[int] | None = None):
         """
-        Gets the pose of each object (including rigid objects and articulated objects) in the robot base frame.
+        Gets the pose of each object (including rigid objects and articulated objects) in the environment frame.
+
+        This implementation uses the base class method which returns poses in environment frame
+        (world frame minus env_origins). This matches the coordinate system used by EEF observations.
 
         Args:
             env_ids: Environment indices to get the pose for. If None, all envs are considered.
 
         Returns:
-            A dictionary that maps object names to object pose matrix in robot base frame (4x4 torch.Tensor)
+            A dictionary that maps object names to object pose matrix (4x4 torch.Tensor)
         """
         if env_ids is None:
             env_ids = slice(None)
 
-        # 调试输出：只在第一次调用时打印
-        if not hasattr(self, '_object_pose_debug_count'):
-            self._object_pose_debug_count = 0
-
-        # Get scene state
-        scene_state = self.scene.get_state(is_relative=True)
-        rigid_object_states = scene_state["rigid_object"]
-        articulation_states = scene_state["articulation"]
-
-        # Get robot root pose
-        robot_root_pose = articulation_states["robot"]["root_pose"]
-        root_pos = robot_root_pose[env_ids, :3]
-        root_quat = robot_root_pose[env_ids, 3:7]
-
-        object_pose_matrix = dict()
-
-        # Process rigid objects
-        for obj_name, obj_state in rigid_object_states.items():
-            pos_obj_base, quat_obj_base = PoseUtils.subtract_frame_transforms(
-                root_pos, root_quat, obj_state["root_pose"][env_ids, :3], obj_state["root_pose"][env_ids, 3:7]
-            )
-            rot_obj_base = PoseUtils.matrix_from_quat(quat_obj_base)
-            object_pose_matrix[obj_name] = PoseUtils.make_pose(pos_obj_base, rot_obj_base)
-
-        # Process articulated objects (except robot)
-        for art_name, art_state in articulation_states.items():
-            if art_name != "robot":  # Skip robot
-                pos_obj_base, quat_obj_base = PoseUtils.subtract_frame_transforms(
-                    root_pos, root_quat, art_state["root_pose"][env_ids, :3], art_state["root_pose"][env_ids, 3:7]
-                )
-                rot_obj_base = PoseUtils.matrix_from_quat(quat_obj_base)
-                object_pose_matrix[art_name] = PoseUtils.make_pose(pos_obj_base, rot_obj_base)
-
-        # 调试输出：打印物体位置
-        if self._object_pose_debug_count < 1:
-            print("[DEBUG OBJECT] Current scene object positions:")
-            for obj_name, pose_matrix in object_pose_matrix.items():
-                pos = pose_matrix[0, :3]
-                print(f"  {obj_name}: pos={pos.numpy()}")
-            self._object_pose_debug_count += 1
-
-        return object_pose_matrix
+        # Use base class implementation which returns poses in environment frame
+        return super().get_object_poses(env_ids)
 
     def get_subtask_term_signals(self, env_ids: Sequence[int] | None = None) -> dict[str, torch.Tensor]:
         """

@@ -63,20 +63,22 @@ class PourWaterSceneCfg(InteractiveSceneCfg):
 
     bottle = RigidObjectCfg(
         prim_path="{ENV_REGEX_NS}/Bottle",
-        init_state=RigidObjectCfg.InitialStateCfg(pos=[0.034, 0.30542, 0.78], rot=[1, 0, 0, 0]),
+        init_state=RigidObjectCfg.InitialStateCfg(
+            pos=[0.034, 0.30542, 1.06752], rot=[1, 0, 0, 0]
+        ),
         spawn=UsdFileCfg(
             usd_path=f"{ASSETS_DIR}/redtea.usdc",
             scale=(0.08, 0.08, 0.08),
             rigid_props=sim_utils.RigidBodyPropertiesCfg(
                 rigid_body_enabled=True,
-                kinematic_enabled=False, # 关键：必须是 False，否则它不动
-                disable_gravity=False,   # 关键：受重力影响
+                kinematic_enabled=False,  # 关键：必须是 False，否则它不动
+                disable_gravity=False,  # 关键：受重力影响
                 max_depenetration_velocity=1.0,
             ),
             mass_props=MassPropertiesCfg(
                 mass=0.15,
             ),
-        )
+        ),
     )
 
     cup = RigidObjectCfg(
@@ -329,7 +331,6 @@ class EventCfg:
             "pose_range": {
                 "x": [-0.01, 0.01],
                 "y": [-0.01, 0.01],
-                "z": [0.78, 0.78],  # 固定高度，防止下落
             },
             "velocity_range": {},
             "asset_cfg": SceneEntityCfg("bottle"),
