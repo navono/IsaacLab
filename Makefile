@@ -55,18 +55,19 @@ g1_pp_play:
 .PHONY: g1_pp_record g1_pp_replay g1_pp_annotation g1_pp_generation g1_pp_train g1_pp_play g1_pw_record g1_pw_replay g1_pw_annotation g1_pw_verify g1_pw_generation g1_pw_ds_replay g1_pw_train
 
 
-CURRENT ?= 1222_1
+DATE ?= 1223_1
 TASK_NAME ?= Isaac-PourWater-G1-InspireFTP-Abs-v0
 # TASK_NAME ?= Isaac-PickPlace-G1-InspireFTP-Abs-v0
 TASK_MIMIC_NAME ?= Isaac-PourWater-G1-InspireFTP-Abs-Mimic-v0
 
-RECORD_G1_TASK_DATASET ?= ./datasets/$(TASK_NAME)/dataset_$(CURRENT).hdf5
-ANNOTATE_G1_TASK_DATASET ?= ./datasets/$(TASK_NAME)/dataset_annotated_$(CURRENT).hdf5
-GENERATED_G1_TASK_DATASET ?= ./datasets/$(TASK_NAME)/generated_dataset_$(CURRENT).hdf5
-GENERATED_G1_TASK_FAILED_DATASET ?= ./datasets/$(TASK_NAME)/generated_dataset_$(CURRENT)_failed.hdf5
+CURRENT_DATE ?= 1223_1
+RECORD_G1_TASK_DATASET ?= ./datasets/$(TASK_NAME)/dataset_$(DATE).hdf5
+ANNOTATE_G1_TASK_DATASET ?= ./datasets/$(TASK_NAME)/dataset_annotated_$(CURRENT_DATE).hdf5
+GENERATED_G1_TASK_DATASET ?= ./datasets/$(TASK_NAME)/generated_dataset_$(CURRENT_DATE).hdf5
+GENERATED_G1_TASK_FAILED_DATASET ?= ./datasets/$(TASK_NAME)/generated_dataset_$(CURRENT_DATE)_failed.hdf5
 
 
-g1_pw_record:
+g1_task_record:
 	./isaaclab.sh -p scripts/tools/record_demos.py \
 	--device cpu \
 	--task $(TASK_NAME) \
@@ -121,18 +122,21 @@ g1_task_ds_failed_replay:
 
 g1_task_train:
 	./isaaclab.sh -p scripts/imitation_learning/robomimic/train.py \
-	--task $(TASK_NAME) --algo bc \
+	--task $(TASK_NAME) \
+	--algo bc \
 	--normalize_training_actions \
 	--dataset $(GENERATED_G1_TASK_DATASET)
 
 g1_task_play:
 	./isaaclab.sh -p scripts/imitation_learning/robomimic/play.py \
-	--device cpu \
+	--device cuda \
 	--enable_pinocchio \
 	--task $(TASK_NAME) \
 	--num_rollouts 10 \
 	--horizon 400 \
-	--checkpoint logs/robomimic/$(TASK_NAME)/bc_rnn_low_dim_gr1t2/20251216175045/models/model_epoch_2000.pth
+	--norm_factor_min -0.5991024971008301 \
+	--norm_factor_max 1.651545524597168 \
+	--checkpoint logs/robomimic/$(TASK_NAME)/bc_rnn_low_dim_gr1t2/20251223135618/models/model_epoch_2000.pth
 
 convert_glb_to_usd:
 	python scripts/tools/batch_convert_glb.py \

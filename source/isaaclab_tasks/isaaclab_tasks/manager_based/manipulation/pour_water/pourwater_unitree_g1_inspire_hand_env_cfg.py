@@ -64,7 +64,7 @@ class PourWaterSceneCfg(InteractiveSceneCfg):
     bottle = RigidObjectCfg(
         prim_path="{ENV_REGEX_NS}/Bottle",
         init_state=RigidObjectCfg.InitialStateCfg(
-            pos=[0.034, 0.30542, 1.06752], rot=[1, 0, 0, 0]
+            pos=[0.060, 0.35942, 1.06752], rot=[1, 0, 0, 0]
         ),
         spawn=UsdFileCfg(
             usd_path=f"{ASSETS_DIR}/redtea.usdc",
@@ -76,7 +76,7 @@ class PourWaterSceneCfg(InteractiveSceneCfg):
                 max_depenetration_velocity=1.0,
             ),
             mass_props=MassPropertiesCfg(
-                mass=0.15,
+                mass=1,
             ),
         ),
     )
