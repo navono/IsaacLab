@@ -69,3 +69,5 @@ tests/
 
 # Docker history
 .isaac-lab-docker-history
+!datasets
+!datasets/Isaac-PourWater-G1-InspireFTP-Abs-v0/

@@ -70,6 +70,24 @@ def transform_source_data_segment_using_object_pose(
         transformed_eef_poses: transformed pose sequence (shape [T, 4, 4])
     """
 
+    # 调试输出：只在第一次调用时打印
+    if not hasattr(transform_source_data_segment_using_object_pose, '_debug_count'):
+        transform_source_data_segment_using_object_pose._debug_count = 0
+
+    if transform_source_data_segment_using_object_pose._debug_count < 2:
+        print(f"[DEBUG TRANSFORM] Source object pose: pos={src_obj_pose[0, :3].numpy()}")
+        print(f"[DEBUG TRANSFORM] Current object pose: pos={obj_pose[0, :3].numpy()}")
+        print(f"[DEBUG TRANSFORM] Source EEF first pose: pos={src_eef_poses[0, :3, 3].numpy()}")
+
+        # 计算相对姿态
+        src_eef_poses_rel_obj = PoseUtils.pose_in_A_to_pose_in_B(
+            pose_in_A=src_eef_poses,
+            pose_A_in_B=PoseUtils.pose_inv(src_obj_pose[None]),
+        )
+        print(f"[DEBUG TRANSFORM] Relative EEF pose: pos={src_eef_poses_rel_obj[0, :3, 3].numpy()}")
+
+        transform_source_data_segment_using_object_pose._debug_count += 1
+
     # Transform source end effector poses to be relative to source object frame
     src_eef_poses_rel_obj = PoseUtils.pose_in_A_to_pose_in_B(
         pose_in_A=src_eef_poses,
@@ -81,6 +99,11 @@ def transform_source_data_segment_using_object_pose(
         pose_in_A=src_eef_poses_rel_obj,
         pose_A_in_B=obj_pose[None],
     )
+
+    # 调试输出：检查变换结果
+    if hasattr(transform_source_data_segment_using_object_pose, '_debug_count') and transform_source_data_segment_using_object_pose._debug_count <= 2:
+        print(f"[DEBUG TRANSFORM] Transformed EEF first pose: pos={transformed_eef_poses[0, :3, 3].numpy()}")
+
     return transformed_eef_poses
 
 
@@ -494,7 +517,13 @@ class DataGenerator:
             src_subtask_gripper_actions = src_subtask_gripper_actions.clone()
 
         # Transform source demonstration segment using relevant object pose.
-        if use_delta_transform is not None:
+        # Check if object transformation should be skipped (for absolute world coordinate tasks)
+        skip_transform = getattr(self.env_cfg.datagen_config, "generation_skip_object_transform", False)
+        
+        if skip_transform:
+            # Skip all coordinate transformations - use source poses directly in world frame
+            transformed_eef_poses = src_eef_poses
+        elif use_delta_transform is not None:
             # Use delta transform from concurrent task
             transformed_eef_poses = transform_source_data_segment_using_delta_object_pose(
                 src_eef_poses, use_delta_transform

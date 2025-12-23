@@ -478,6 +478,8 @@ def run_simulation_loop(
                 current_recorded_demo_count = env.recorder_manager.exported_successful_episode_count
                 label_text = f"Recorded {current_recorded_demo_count} successful demonstrations."
                 print(label_text)
+                # Sleep for 2 seconds before starting next recording
+                time.sleep(2.0)
 
             # Check if we've reached the desired number of demos
             if args_cli.num_demos > 0 and env.recorder_manager.exported_successful_episode_count >= args_cli.num_demos:

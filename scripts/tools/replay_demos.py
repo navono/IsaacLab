@@ -164,9 +164,18 @@ def main():
 
     # Get idle action (idle actions are applied to envs without next action)
     if hasattr(env_cfg, "idle_action"):
-        idle_action = env_cfg.idle_action.repeat(num_envs, 1)
+        # Check if idle_action matches environment action space
+        if len(env_cfg.idle_action.shape) == 0:
+            # It's a scalar, need to get actual action dimension from env
+            idle_action = torch.zeros(env.action_space.shape, device=env.device)
+        else:
+            # Create tensor matching environment action space
+            idle_action = torch.zeros(env.action_space.shape, device=env.device)
+            # Copy idle_action values if they fit
+            min_dim = min(idle_action.shape[-1], env_cfg.idle_action.numel())
+            idle_action[:, :min_dim] = env_cfg.idle_action[:min_dim]
     else:
-        idle_action = torch.zeros(env.action_space.shape)
+        idle_action = torch.zeros(env.action_space.shape, device=env.device)
 
     # reset before starting
     env.reset()

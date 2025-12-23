@@ -386,6 +386,16 @@ class MultiWaypoint:
         # construct action from target poses and gripper actions
         target_eef_pose_dict = {eef_name: waypoint.pose for eef_name, waypoint in self.waypoints.items()}
         gripper_action_dict = {eef_name: waypoint.gripper_action for eef_name, waypoint in self.waypoints.items()}
+
+        # 调试输出：在关键步骤打印少量信息
+        if not hasattr(env, '_waypoint_debug_count'):
+            env._waypoint_debug_count = 0
+
+        if env._waypoint_debug_count < 5:
+            for eef_name, waypoint in self.waypoints.items():
+                pos = waypoint.pose[:2, 3]
+                print(f"[DEBUG] Waypoint {eef_name}: pos={pos.numpy()}, gripper_range=[{waypoint.gripper_action.min():.3f}, {waypoint.gripper_action.max():.3f}]")
+            env._waypoint_debug_count += 1
         if "action_noise_dict" in inspect.signature(env.target_eef_pose_to_action).parameters:
             action_noise_dict = {eef_name: waypoint.noise for eef_name, waypoint in self.waypoints.items()}
             play_action = env.target_eef_pose_to_action(
